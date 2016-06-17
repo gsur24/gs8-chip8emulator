@@ -1,3 +1,7 @@
+/* Author: Gokul Suresh
+ * Description: This is the header file for the chip8 emulator that I worked 
+ * on during the summer of 2016 */
+
 /* This header file contains the cpu core implementation for the chip 8
  * emulator */
 
@@ -9,16 +13,27 @@ class chip8 {
 	unsigned short I;			/* the Index register */
 	unsigned short pc;			/* the program counter */
 	unsigned char gfx[64 * 32];	/* graphics array */
+
 	unsigned char delay_timer;	/* the delay timer */
 	unsigned char sound_timer;	/* the sound timer */
 
 	unsigned short stack[16];	/* the RTS */
 	unsigned short sp;			/* the stack pointer */
 
+	long drawFlag;				/* indicates whether the screen needs to be 
+								drawn or not */
+
 	unsigned short key[16];		/* used to implement the hex based keypad
 								for chip 8 */
 
+	static int debug;			/* indicates if debug mode is on or off */
+
 public:
 	void initialize();
+	void emulateCycle();
+	static void Set_Debug_On(void);
+	static void Set_Debug_Off(void);
 	
 };
+
+int chip8::debug;
