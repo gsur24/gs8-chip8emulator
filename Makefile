@@ -1,14 +1,10 @@
-all: chip8.exe
-
-chip8.exe: chip8.o
-	gcc -o chip8.exe chip8.o
+all: chip8.o
 
 chip8.o: chip8.cpp
-	gcc -c chip8.cpp
+	g++ -o chip8 chip8.cpp 
+	chmod u+x chip8
 
 clean:
-	rm chip8.o chip8.exe
+	rm -f chip8 *~
 
-swap:
-	rm *~
 
