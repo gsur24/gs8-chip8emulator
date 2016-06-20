@@ -26,13 +26,14 @@ class chip8 {
 	unsigned short key[16];		/* used to implement the hex based keypad
 								for chip 8 */
 
-	static int debug;			/* indicates if debug mode is on or off */
 
 public:
 	void initialize();
 	void emulateCycle();
 	static void Set_Debug_On(void);
 	static void Set_Debug_Off(void);
+	static int debug;			/* indicates if debug mode is on or off */
+	void loadGame(const char * filename);	/* loads the game */
 	
 };
 
