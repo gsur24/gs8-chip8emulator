@@ -382,7 +382,8 @@ void chip8::emulateCycle() {
             switch (opcode & 0x00FF) {
             
                 case 0x009E:    // EX9E: skips the next instruction if key VX is pressed
-                    if (key[(opcode & 0x0F00) >> 8] == 1) {
+                    if (key[V[(opcode & 0x0F00) >> 8]] == 1) {
+                        
                         pc += 4;
                         if (debug)
                             cerr << opcode << ": skipping next instruction since key pressed\n";
@@ -395,7 +396,7 @@ void chip8::emulateCycle() {
                     break;
                 
                 case 0x00A1:    // EXA1: skips the next instruction if key VX is not pressed
-                    if (key[(opcode & 0x0F00) >> 8] == 0) {
+                    if (key[V[(opcode & 0x0F00) >> 8]] == 0) {
                         pc += 4;
                         if (debug)
                             cerr << opcode << ": skipping next instruction since key not pressed\n";
@@ -424,6 +425,29 @@ void chip8::emulateCycle() {
                     pc += 2;
                     break;
                     
+                case 0x000A: // FX0A: A key press is awaited, and then stored in VX
+                {
+                    bool keyPress = false;
+                    
+                    for(int i = 0; i < 16; ++i)
+                    {
+                        if(key[i] != 0)
+                        {
+                            
+                            V[(opcode & 0x0F00) >> 8] = i;
+                            keyPress = true;
+                        }
+                    }
+                    
+                    // If we didn't received a keypress, skip this cycle and try again.
+                    if(!keyPress)						
+                        return;
+                    
+                    pc += 2;
+                    break;
+                }
+                    
+                    
                 case 0x0015:	// FX15: sets the delay timer to V[x]
                     delay_timer = V[(opcode & 0x0F00) >> 8];
                     if (debug)
@@ -432,7 +456,20 @@ void chip8::emulateCycle() {
                     break;
                     
                 case 0x0018: // FX18: Sets the sound timer to VX
+                    if (debug)
+                        cerr << opcode << ": setting sound timer to VX\n";
                     sound_timer = V[(opcode & 0x0F00) >> 8];
+                    pc += 2;
+                    break;
+                    
+                case 0x001E: // FX1E: Adds VX to I
+                    if (debug)
+                        cerr << opcode << ": adding VX to I\n";
+                    if(I + V[(opcode & 0x0F00) >> 8] > 0xFFF)	// handles range overflow
+                        V[0xF] = 1;
+                    else
+                        V[0xF] = 0;
+                    
                     pc += 2;
                     break;
                     
@@ -541,8 +578,8 @@ int main(int argc, char ** argv) {
             // Get the window surface
             screenSurface = SDL_GetWindowSurface(window);
             
-            // Fill the surface white
-            SDL_FillRect(screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00));
+            // Fill the surface black
+            SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0x00, 0x00, 0x00));
             
             //Update the surface
             SDL_UpdateWindowSurface(window);
@@ -556,7 +593,7 @@ int main(int argc, char ** argv) {
 	
 	// initialize the chip
 	myChip8.initialize();
-	myChip8.loadGame("PONG");
+	myChip8.loadGame("pong2.c8");
     
 	
 	// emulation loop
@@ -566,7 +603,9 @@ int main(int argc, char ** argv) {
         while (SDL_PollEvent (&event)) {
             
             if (event.type == SDL_KEYDOWN) {
+               
                 switch(event.key.keysym.sym) {
+                    
                     case SDLK_1: myChip8.key[0x1] = 1; break;
                     case SDLK_2: myChip8.key[0x2] = 1; break;
                     case SDLK_3: myChip8.key[0x3] = 1; break;
@@ -646,7 +685,7 @@ int main(int argc, char ** argv) {
                 
             }
             SDL_RenderPresent(renderer);
-            SDL_Delay(100);
+            SDL_Delay(1);
             myChip8.drawFlag = false;
         }
     }
